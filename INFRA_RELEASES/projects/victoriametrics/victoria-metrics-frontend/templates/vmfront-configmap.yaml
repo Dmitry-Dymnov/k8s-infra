@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-nginx
+data:
+  nginx.conf: |-
+    user nginx;
+    worker_processes auto;
+    error_log /dev/stdout warn;
+    pid /tmp/nginx.pid;
+
+    events {
+        worker_connections 2048;
+    }    
+    http {
+         server {
+              listen          8080;
+              location = / {
+              index /vmui;
+              }
+              location / {
+                   rewrite /(.+) /select/0/$1 break;
+                   proxy_pass http://victoria-metrics-cluster-vmselect:8481;
+              }
+              location /api {
+                   rewrite /(.+) /select/0/prometheus/$1 break;
+                   proxy_pass http://victoria-metrics-cluster-vmselect:8481;
+              }
+              location ^~/targets {
+                   rewrite /(.+) /$1 break;
+                   proxy_pass http://victoria-metrics-agent:8429;
+             }
+              location ^~/service-discovery {
+                   rewrite /(.+) /$1 break;
+                   proxy_pass http://victoria-metrics-agent:8429;
+              }
+              location ^~/static {
+                   rewrite /(.+) /$1 break;
+                   proxy_pass http://victoria-metrics-agent:8429;
+              }
+         }
+    }

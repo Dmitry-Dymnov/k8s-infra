@@ -1,0 +1,20 @@
+image:
+  repository: harbor.local/project-cache/library/nginx
+  tag: stable-alpine
+
+requests:
+  memory: 64Mi
+  cpu: 50m
+limits:
+  memory: 128Mi
+  cpu: 100m
+
+replicas: 2
+  
+ingress:
+  host: "vm-k8s-test.company.com"
+# annotations: {} 
+  annotations:
+    nginx.ingress.kubernetes.io/server-snippet: |-
+        allow 10.10.10.0/21;
+        deny all;

@@ -1,0 +1,62 @@
+default:
+  image:
+    name: harbor.local:80/library/terraform:0.3
+    entrypoint:
+      - /usr/bin/env
+      - "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  cache:
+    key: k3s-test-infra
+    paths:
+      - .terraform
+
+stages:
+  - plan
+  - apply
+
+variables:
+  UI_RUNNERS: UI
+#  TF_LOG: debug
+
+plan:
+  variables:
+    CI_DEBUG_TRACE: "false"
+  stage: plan
+  before_script:
+    - 'mkdir -p .terraform/providers'
+    - 'cp -R providers/* .terraform/providers/'
+    - 'chmod -R +x .terraform/providers/'
+  script:
+    - date
+    - terraform init -input=false -plugin-dir=.terraform/providers
+#    - 'cat ./.terraform.lock.hcl'
+    - terraform validate
+    - terraform plan -out=tfplan -input=false
+  only:
+    refs:
+    - main
+    - test
+  artifacts:
+    paths:
+      - tfplan
+    expire_in: 1 hrs
+  tags:
+    - $UI_RUNNERS
+
+apply:
+  stage: apply
+  before_script:
+    - 'mkdir -p .terraform/providers'
+    - 'cp -R providers/* .terraform/providers/'
+    - 'chmod -R +x .terraform/providers/'
+    - 'echo "Stage start time: $(date)"'
+  script:
+    - date
+    - terraform apply -input=false -auto-approve tfplan
+  when: manual
+  only:
+    - main
+    - test
+  dependencies:
+    - plan
+  tags:
+    - $UI_RUNNERS

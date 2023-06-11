@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-metrics-cluster-frontend
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        app.kubernetes.io/instance: victoria-metrics-cluster
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: nginx
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: victoria-metrics-cluster-frontend
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1001
+        resources:
+          requests:
+            memory: {{ .Values.requests.memory }}
+            cpu: {{ .Values.requests.cpu }}
+          limits:
+            memory: {{ .Values.limits.memory }}
+            cpu: {{ .Values.limits.cpu }}
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config-nginx
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - mountPath: /var/cache/nginx
+          name: cache
+      volumes:
+        - name: config-nginx
+          configMap:
+            name: config-nginx
+        - emptyDir: {}
+          name: cache

@@ -1,0 +1,1 @@
+Вместо этого файла должен лежать провайдер terraform-provider-kubernetes_v2.20.0_x5

@@ -1,0 +1,7 @@
+userEditServiceAccounts:
+  namespaces:
+  - testns-test
+userViewServiceAccounts:
+  namespaces:
+  - testns-dev
+  - testns-stage

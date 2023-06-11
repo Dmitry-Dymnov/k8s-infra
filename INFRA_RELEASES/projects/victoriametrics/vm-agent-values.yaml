@@ -1,0 +1,22 @@
+image:
+  repository: victoriametrics/vmagent
+  tag: "v1.80.0"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+extraArgs:
+  envflag.enable: "true"
+  envflag.prefix: VM_
+  loggerFormat: json
+  promscrape.maxScrapeSize: "867772160"
+  remoteWrite.maxDiskUsagePerURL: 4GB
+
+remoteWriteUrls:
+  - http://victoria-metrics-cluster-vminsert.monitoring.svc.cluster.local:8480/insert/0/prometheus/
+  - http://vmetrics.company.com/api/v1/write

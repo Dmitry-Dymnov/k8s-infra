@@ -1,0 +1,84 @@
+limitRange: enable
+namespace: enable
+NetworkPolicies: enable
+resourceQuota: enable
+roleBinding: enable
+
+resourcequota:
+  cpu: '1.0'
+  memory: 1Gi
+  storage: 0Gi
+  persistentvolumeclaims: '0'
+  requests_ephemeral_storage: '0'
+  services: '10'
+  pods: '20'
+  replicationcontrollers: '0'
+  statefulsets_apps: '0'
+  services_loadbalancers: '0'
+  services_nodeports: '0'
+  jobs: '30'
+  cronjobs: '10'
+
+limitrange:
+  cpu:
+    requests: 50m
+    limit: 100m
+  memory:
+    requests: 64Mi
+    limit: 128Mi
+
+networkPolicy:
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+          namespaceSelector:
+            matchLabels: {}
+        - ipBlock:
+            cidr: 10.43.0.10/32  # ip dns
+    - ports:
+        - port: 3128
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 192.168.1.204/32 #Proxy
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 192.168.1.201/32 #harbor.local
+        - ipBlock:
+            cidr: 192.168.1.202/32 #vault.local
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              projectName: prometheus
+          podSelector:
+            matchLabels:
+              app: prometheus
+              component: server
+
+  #Example egress
+  #- to:
+  #  - namespaceSelector:
+  #      matchLabels:
+  #        ns: treasury-redis
+  #    podSelector:
+  #      matchLabels:
+  #        app: redis-cluster
+  #Example ingress
+  #- ports:
+  #  - port: 6379
+  #    protocol: TCP
+  #  from:
+  #  - namespaceSelector: {}

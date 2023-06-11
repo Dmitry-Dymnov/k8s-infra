@@ -1,0 +1,42 @@
+vmselect:
+  image:
+    repository: victoriametrics/vmselect
+    tag: v1.80.0-cluster
+    replicaCount: 1
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 150m
+      memory: 128Mi
+
+vminsert:
+  image:
+    repository: victoriametrics/vminsert
+    tag: v1.80.0-cluster
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+vmstorage:
+  image:
+    repository: victoriametrics/vmstorage
+    tag: v1.80.0-cluster
+  retentionPeriod: 2d
+  persistentVolume:
+    storageClass: "longhorn"
+    size: 10Gi
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 3Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi

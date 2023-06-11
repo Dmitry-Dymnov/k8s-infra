@@ -1,0 +1,48 @@
+{{- $name := "add-default-securitycontext" }}
+{{- if eq (include "kyverno-policies.podSecurityCompany" (merge (dict "name" $name) .)) "true" }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ $name }}
+  annotations:
+    policies.kyverno.io/title: add-default-securitycontext
+    policies.kyverno.io/category: add-default-securitycontext
+    {{- if .Values.podSecuritySeverity }}
+    policies.kyverno.io/severity: {{ .Values.podSecuritySeverity | quote }}
+    {{- end }}
+    policies.kyverno.io/subject: Pod
+    kyverno.io/kyverno-version: 1.6.0
+    kyverno.io/kubernetes-version: "1.22-1.23"
+    policies.kyverno.io/description: >-
+      A Pod securityContext entry defines fields such as the user and group which should be used to run the Pod.
+      Sometimes choosing default values for users rather than blocking is a better alternative to not impede
+      such Pod definitions. This policy will mutate a Pod to set `runAsNonRoot`, runAsUser`, `runAsGroup`, and `fsGroup` fields
+      within the Pod securityContext if they are not already set.
+spec:
+  validationFailureAction: {{ .Values.validationFailureAction }}
+  {{- with concat (index .Values "validationFailureActionOverrides" "all") (default list (index .Values "validationFailureActionOverrides" $name)) }}
+  validationFailureActionOverrides: {{ toYaml . | nindent 4 }}
+  {{- end }}
+  background: {{ .Values.background }}
+  rules:
+    - name: add-default-securitycontext
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      {{- with index .Values "policyExclude" $name }}
+      exclude:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with index .Values "policyPreconditions" $name }}
+      preconditions:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      mutate:
+        patchStrategicMerge:
+          spec:
+            securityContext:
+              +(runAsUser): 3456
+              +(fsGroup): 2000
+{{- end }}
